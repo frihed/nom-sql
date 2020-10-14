@@ -639,6 +639,7 @@ fn delim_fx_args(i: &[u8]) -> IResult<&[u8], (FunctionArguments, bool)> {
 
 pub fn column_function(i: &[u8]) -> IResult<&[u8], FunctionExpression> {
     let delim_group_concat_fx = delimited(tag("("), group_concat_fx, tag(")"));
+    let delim_field_list = delimited(tag("("), field_definition_expr, tag(")"));
     alt((
         map(tag_no_case("count(*)"), |_| FunctionExpression::CountStar),
         map(preceded(tag_no_case("count"), delim_fx_args), |args| {
@@ -655,6 +656,9 @@ pub fn column_function(i: &[u8]) -> IResult<&[u8], FunctionExpression> {
         }),
         map(preceded(tag_no_case("min"), delim_fx_args), |args| {
             FunctionExpression::Min(args.0.clone())
+        }),
+        map(preceded(tag_no_case("concat"), delim_field_list), |args| {
+            FunctionExpression::Concat(args)
         }),
         map(
             preceded(tag_no_case("group_concat"), delim_group_concat_fx),
@@ -1091,6 +1095,21 @@ mod tests {
             ))),
         };
         assert_eq!(res.unwrap().1, expected);
+    }
+
+    #[test]
+    fn multi_args_function() {
+        let qs = b"CONCAT(first_name, ' ', last_name)";
+        let qs1 = "CONCAT('%', 'abc', '%')";
+
+        let res = column_function(qs);
+        let expected = FunctionExpression::Concat(vec![
+            FieldDefinitionExpression::Col(Column::from("first_name")),
+            FieldDefinitionExpression::Value(FieldValueExpression::Literal(LiteralExpression::from(Literal::String(" ".to_string())))),
+            FieldDefinitionExpression::Col(Column::from("last_name")),
+        ]);
+        assert_eq!(res.unwrap().1, expected);
+        assert_eq!(format!("{}", column_function(qs1.as_bytes()).unwrap().1), qs1);
     }
 
     #[test]

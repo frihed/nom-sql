@@ -8,6 +8,8 @@ select a from db1.table1;
 select table1.a from db1.table1;
 select table1.a from db1.table1 as d;
 
+SELECT CONCAT(first_name, ' ', last_name) AS  name, job_title  FROM employees e, jobs j WHERE e.job_id = j.job_id AND first_name LIKE concat('%', 'Smith', '%');
+
 SELECT n+10 FROM tens WHERE n+10 >= 100;
 SELECT n+10 FROM tens WHERE n+10 < 100;
 SELECT n+10 FROM tens WHERE n+10 > 100;

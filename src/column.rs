@@ -5,6 +5,7 @@ use std::str;
 use case::CaseWhenExpression;
 use common::{Literal, SqlType};
 use keywords::escape_if_keyword;
+use FieldDefinitionExpression;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum FunctionExpression {
@@ -15,6 +16,7 @@ pub enum FunctionExpression {
     Max(FunctionArguments),
     Min(FunctionArguments),
     GroupConcat(FunctionArguments, String),
+    Concat(Vec<FieldDefinitionExpression>),
 }
 
 impl Display for FunctionExpression {
@@ -32,7 +34,16 @@ impl Display for FunctionExpression {
             FunctionExpression::Min(ref col) => write!(f, "min({})", col),
             FunctionExpression::GroupConcat(ref col, ref s) => {
                 write!(f, "group_concat({}, {})", col, s)
-            }
+            },
+            FunctionExpression::Concat(ref fs) => write!(
+                f,
+                "CONCAT({})",
+                fs
+                    .iter()
+                    .map(|field| format!("{}", field))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
         }
     }
 }
