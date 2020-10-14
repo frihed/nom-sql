@@ -972,8 +972,10 @@ pub fn literal(i: &[u8]) -> IResult<&[u8], Literal> {
 
 pub fn literal_expression(i: &[u8]) -> IResult<&[u8], LiteralExpression> {
     map(
-        pair(
-            delimited(opt(tag("(")), literal, opt(tag(")"))),
+        pair(alt((
+                delimited(tag("("), literal, tag(")")),
+                literal
+                )),
             opt(as_alias),
         ),
         |p| LiteralExpression {
